@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>XP Calculators</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      max-width: 600px;
+      margin: auto;
+      background: #f7f7f7;
+      color: #222;
+    }
+    h2 {
+      color: #007bff;
+      border-bottom: 2px solid #007bff;
+      padding-bottom: 5px;
+    }
+    label {
+      display: block;
+      margin-top: 15px;
+      font-weight: bold;
+    }
+    input[type="number"] {
+      padding: 8px;
+      font-size: 16px;
+      width: 100%;
+      box-sizing: border-box;
+      margin-top: 5px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+    button {
+      margin-top: 15px;
+      background-color: #007bff;
+      border: none;
+      color: white;
+      padding: 10px 15px;
+      font-size: 16px;
+      border-radius: 5px;
+      cursor: pointer;
+      width: 100%;
+    }
+    button:hover {
+      background-color: #0056b3;
+    }
+    .result {
+      margin-top: 15px;
+      font-size: 18px;
+      color: #333;
+      background: #e3eaff;
+      padding: 10px;
+      border-radius: 5px;
+      min-height: 40px;
+    }
+    .section {
+      background: white;
+      margin-top: 30px;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px #ddd;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>XP Calculators</h1>
+
+  <!-- Section 1 -->
+  <div class="section">
+    <h2>1. XP Needed: From Level to Level</h2>
+    <label for="levelFrom">From Level (≥ 0):</label>
+    <input type="number" id="levelFrom" min="0" placeholder="Enter start level" />
+
+    <label for="levelTo">To Level (greater than From Level):</label>
+    <input type="number" id="levelTo" min="1" placeholder="Enter end level" />
+
+    <button onclick="calculateXPFromTo()">Calculate XP</button>
+    <div class="result" id="resultFromTo"></div>
+  </div>
+
+  <!-- Section 2 -->
+  <div class="section">
+    <h2>2. Rounds Needed to Reach Level</h2>
+    <label for="currentLevel">Current Level (≥ 0):</label>
+    <input type="number" id="currentLevel" min="0" placeholder="Enter your current level" />
+
+    <label for="xpPerRound">XP Gained Per Round (> 0):</label>
+    <input type="number" id="xpPerRound" min="1" placeholder="Enter XP you get per round" />
+
+    <label for="targetLevel2">Target Level (greater than current):</label>
+    <input type="number" id="targetLevel2" min="1" placeholder="Enter target level" />
+
+    <button onclick="calculateRounds()">Calculate Rounds</button>
+    <div class="result" id="resultRounds"></div>
+  </div>
+
+  <!-- Section 3 -->
+  <div class="section">
+    <h2>3. Estimated Time to Reach Level</h2>
+    <label for="currentLevelTime">Current Level (≥ 0):</label>
+    <input type="number" id="currentLevelTime" min="0" placeholder="Enter your current level" />
+
+    <label for="xpPerRoundTime">XP Gained Per Round (> 0):</label>
+    <input type="number" id="xpPerRoundTime" min="1" placeholder="Enter XP per round" />
+
+    <label for="targetLevelTime">Target Level (greater than current):</label>
+    <input type="number" id="targetLevelTime" min="1" placeholder="Enter target level" />
+
+    <label for="timePerRound">Time Per Round (minutes, > 0):</label>
+    <input type="number" id="timePerRound" min="0.1" step="0.1" placeholder="Enter time for one round" />
+
+    <button onclick="calculateTime()">Calculate Time</button>
+    <div class="result" id="resultTime"></div>
+  </div>
+
+<script>
+  const baseXP = 92;
+  const growthFactor = 1.0802;
+
+  // XP needed from level n to n+1
+  function xpForLevel(level) {
+    return baseXP * Math.pow(growthFactor, level);
+  }
+
+  // 1. XP needed from Level From to Level To (exclusive)
+  function calculateXPFromTo() {
+    const from = parseInt(document.getElementById('levelFrom').value);
+    const to = parseInt(document.getElementById('levelTo').value);
+    const resultDiv = document.getElementById('resultFromTo');
+
+    if (isNaN(from) || isNaN(to) || from < 0 || to <= from) {
+      resultDiv.innerText = "Please enter valid levels: 'From Level' ≥ 0 and less than 'To Level'.";
+      return;
+    }
+
+    let totalXP = 0;
+    for (let lvl = from; lvl < to; lvl++) {
+      totalXP += xpForLevel(lvl);
+    }
+
+    resultDiv.innerText = `Total XP needed to go from level ${from} to level ${to}: ${Math.round(totalXP)} XP`;
+  }
+
+  // 2. Calculate how many rounds needed to reach target level
+  function calculateRounds() {
+    const current = parseInt(document.getElementById('currentLevel').value);
+    const xpPerRound = parseFloat(document.getElementById('xpPerRound').value);
+    const target = parseInt(document.getElementById('targetLevel2').value);
+    const resultDiv = document.getElementById('resultRounds');
+
+    if (
+      isNaN(current) || isNaN(xpPerRound) || isNaN(target) ||
+      current < 0 || xpPerRound <= 0 || target <= current
+    ) {
+      resultDiv.innerText = "Please enter valid inputs: Current level ≥ 0, XP per round > 0, and target level > current level.";
+      return;
+    }
+
+    // Calculate total XP needed from current level to target
+    let totalXP = 0;
+    for (let lvl = current; lvl < target; lvl++) {
+      totalXP += xpForLevel(lvl);
+    }
+
+    // Calculate rounds needed (round up)
+    const roundsNeeded = Math.ceil(totalXP / xpPerRound);
+
+    resultDiv.innerText = `You need approximately ${roundsNeeded} rounds to reach level ${target} from level ${current}.`;
+  }
+
+  // 3. Calculate estimated time to reach target level
+  function calculateTime() {
+    const current = parseInt(document.getElementById('currentLevelTime').value);
+    const xpPerRound = parseFloat(document.getElementById('xpPerRoundTime').value);
+    const target = parseInt(document.getElementById('targetLevelTime').value);
+    const timePerRound = parseFloat(document.getElementById('timePerRound').value);
+    const resultDiv = document.getElementById('resultTime');
+
+    if (
+      isNaN(current) || isNaN(xpPerRound) || isNaN(target) || isNaN(timePerRound) ||
+      current < 0 || xpPerRound <= 0 || target <= current || timePerRound <= 0
+    ) {
+      resultDiv.innerText = "Please enter valid inputs: Current level ≥ 0, XP per round > 0, target level > current level, and time per round > 0.";
+      return;
+    }
+
+    // Calculate total XP needed
+    let totalXP = 0;
+    for (let lvl = current; lvl < target; lvl++) {
+      totalXP += xpForLevel(lvl);
+    }
+
+    const roundsNeeded = totalXP / xpPerRound;
+    const totalTimeMinutes = roundsNeeded * timePerRound;
+
+    // Format time in hours and minutes
+    const hours = Math.floor(totalTimeMinutes / 60);
+    const minutes = Math.round(totalTimeMinutes % 60);
+
+    let timeString = "";
+    if (hours > 0) {
+      timeString += `${hours} hour${hours > 1 ? "s" : ""} `;
+    }
+    timeString += `${minutes} minute${minutes !== 1 ? "s" : ""}`;
+
+    resultDiv.innerText = `Estimated time to reach level ${target} from level ${current} is approximately ${timeString}.`;
+  }
+</script>
+
+</body>
+</html>
